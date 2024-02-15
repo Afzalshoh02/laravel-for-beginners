@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -21,6 +22,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'avatar',
     ];
 
     /**
@@ -42,4 +44,20 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+    protected $guarded = [];
+//    fn hash password
+//    public function password(): Attribute
+//    {
+//        return Attribute::make(
+//            set: fn ($value) => bcrypt($value)
+//        );
+//    }
+
+//    fn name strtoupper
+//    public function name(): Attribute
+//    {
+//        return Attribute::make(
+//            get: fn ($value) => strtoupper($value)
+//        );
+//    }
 }
