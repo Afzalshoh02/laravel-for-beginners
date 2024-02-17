@@ -33,7 +33,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
 
 Route::post('/auth/redirect', function () {
     return Socialite::driver('github')->redirect();
@@ -44,7 +44,7 @@ Route::get('/auth/callback', function () {
     $user = \App\Models\User::updateOrCreate(
         [
             'email' => $user->email,
-        ],[
+        ], [
             'name' => $user->nickname,
             'password' => 'password',
         ]
@@ -52,6 +52,11 @@ Route::get('/auth/callback', function () {
     \Illuminate\Support\Facades\Auth::login($user);
     return redirect('/dashboard');
 //    dd($user);
+});
+Route::middleware('auth')->group(function () {
+    Route::get('/ticket/create', function () {
+        return view('ticket.create');
+    });
 });
 
 //Route::get('/openai', function () {
