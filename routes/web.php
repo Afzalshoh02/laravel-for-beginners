@@ -54,9 +54,7 @@ Route::get('/auth/callback', function () {
 //    dd($user);
 });
 Route::middleware('auth')->group(function () {
-    Route::get('/ticket/create', function () {
-        return view('ticket.create');
-    });
+    Route::resource('/ticket', \App\Http\Controllers\TicketController::class);
 });
 
 //Route::get('/openai', function () {
