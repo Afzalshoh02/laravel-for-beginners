@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreTicketRequest;
 use App\Http\Requests\UpdateTicketRequest;
 use App\Models\Ticket;
+use App\Models\User;
+use App\Notifications\TicketUpdatedNotification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -34,18 +36,15 @@ class TicketController extends Controller
     public function store(StoreTicketRequest $request)
     {
         $ticket = Ticket::create([
-            'title' => $request->title,
+            'title'       => $request->title,
             'description' => $request->description,
-            'user_id' => auth()->id(),
+            'user_id'     => auth()->id(),
         ]);
+
         if ($request->file('attachment')) {
-            $ext = $request->file('attachment')->extension();
-            $contents = file_get_contents($request->file('attachment'));
-            $file_name = Str::random(25);
-            $path = "attachment/$file_name.$ext";
-            Storage::disk('public')->put($path, $contents);
-            $ticket->update(['attachment' => $path]);
+            $this->storeAttachment($request, $ticket);
         }
+
         return redirect(route('ticket.index'));
     }
 
@@ -62,7 +61,7 @@ class TicketController extends Controller
      */
     public function edit(Ticket $ticket)
     {
-        //
+        return view('ticket.edit', compact('ticket'));
     }
 
     /**
@@ -70,7 +69,19 @@ class TicketController extends Controller
      */
     public function update(UpdateTicketRequest $request, Ticket $ticket)
     {
-        //
+        $ticket->update($request->except('attachment'));
+
+        if ($request->has('status')) {
+            $user = User::find($ticket->user_id);
+            $ticket->user->notify(new TicketUpdatedNotification($ticket));
+//            return (new TicketUpdatedNotification($ticket))->toMail($user);
+        }
+
+        if ($request->file('attachment')) {
+            Storage::disk('public')->delete($ticket->attachment);
+            $this->storeAttachment($request, $ticket);
+        }
+        return redirect(route('ticket.index'));
     }
 
     /**
@@ -80,5 +91,15 @@ class TicketController extends Controller
     {
         $ticket->delete();
         return redirect(route('ticket.index'));
+    }
+
+    protected function storeAttachment($request, $ticket)
+    {
+        $ext      = $request->file('attachment')->extension();
+        $contents = file_get_contents($request->file('attachment'));
+        $filename = Str::random(25);
+        $path     = "attachments/$filename.$ext";
+        Storage::disk('public')->put($path, $contents);
+        $ticket->update(['attachment' => $path]);
     }
 }
